@@ -1,4 +1,4 @@
-import { sbiUtils as sUtils } from "./sbiUtils.js";
+import { sbiUtils as sUtils, sbiUtils } from "./sbiUtils.js";
 import { sbiRegex as sRegex } from "./sbiRegex.js";
 import { sbiActor as sActor } from "./sbiActor.js";
 import {
@@ -323,18 +323,18 @@ export class sbiParser {
         let customType = null;
 
         // Split on ";" first for lines like "poison; bludgeoning, piercing, and slashing from nonmagical attacks"
-        const strings = line.split(";");
+        /*const strings = line.split(";");
 
         if (strings.length === 2) {
             customType = strings[1].trim();
         } else {
             // Handle something like "piercing from magic weapons wielded by good creatures"
             // by taking out the known types, commas, and spaces, and seeing if there's anything left.
-            const descLeftover = line.replace(regex, "").replace(/,/g, "").trim();
+        */    const descLeftover = line.replace(regex, "").replace(/,/g, "").trim();
             if (descLeftover) {
                 customType = descLeftover;
             }
-        }
+        //}
 
         if (knownTypes.length) {
             switch (type) {
@@ -354,18 +354,19 @@ export class sbiParser {
         }
 
         if (customType) {
+            const customTypes = sbiUtils.capitalizeAll(customType).replace(" ","; ")
             switch (type) {
                 case DamageConditionId.immunities:
-                    creature.specialDamageImmunities = customType;
+                    creature.specialDamageImmunities = customTypes;
                     break;
                 case DamageConditionId.resistances:
-                    creature.specialDamageResistances = customType;
+                    creature.specialDamageResistances = customTypes;
                     break;
                 case DamageConditionId.vulnerabilities:
-                    creature.specialDamageVulnerabilities = customType;
+                    creature.specialDamageVulnerabilities = customTypes;
                     break;
                 case BlockID.conditionImmunities:
-                    creature.specialConditionImmunities = customType;
+                    creature.specialConditionImmunities = customTypes;
                     break;
             }
         }

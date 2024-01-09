@@ -710,25 +710,43 @@ export class sbiActor {
 
         if (specialDamage) {
             const specialDamagesLower = specialDamage.toLowerCase();
-
-            // "mundane attacks" is an MCDM thing.
-            if (specialDamagesLower.includes("nonmagical weapons")
-                || specialDamagesLower.includes("nonmagical attacks")
-                || specialDamagesLower.includes("mundane attacks")) {
-                sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, "mgc")
+    
+            let splitSpecialDamage = specialDamagesLower.split(" and ");
+            console.log("THE SPLITTER", splitSpecialDamage);
+    
+            // Declare bypasses outside the block
+            let bypasses = [];
+    
+            if (splitSpecialDamage.length > 1) {
+                let hasBypass = splitSpecialDamage[1].trim();
+                console.log("Relvant Special Damage?", hasBypass);
+    
+                // Handle bypasses
+                if (hasBypass.includes("nonmagical weapons")
+                    || hasBypass.includes("nonmagical attacks")
+                    || hasBypass.includes("mundane attacks")) {
+                    bypasses.push("mgc");
+                }
+    
+                if (hasBypass.includes("adamantine")) {
+                    bypasses.push("ada");
+                }
+    
+                if (hasBypass.includes("silvered")) {
+                    bypasses.push("sil");
+                }
             }
-
-            if (specialDamagesLower.includes("adamantine")) {
-                sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, ["ada", "mgc"])
+    
+            // Assign both bypasses and special damages
+            if (bypasses.length > 0) {
+                sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, bypasses);
+                sUtils.assignToObject(actorData, `data.traits.${damageID}.custom`, splitSpecialDamage[0].trim())
             }
-
-            if (specialDamagesLower.includes("silvered")) {
-                sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, ["sil", "mgc"])
-            }
-
-            // If any bypasses have been set, then assume Foundry will take care of setting the special damage text.
-            if (actorData.data && !actorData.data.traits[damageID]?.bypasses) {
-                sUtils.assignToObject(actorData, `data.traits.${damageID}.custom`, sUtils.capitalizeFirstLetter(specialDamage))
+    
+            // If any bypasses have been set or special damage exists, set the custom text
+            if (bypasses.length > 0 || actorData.data && !actorData.data.traits[damageID]?.bypasses) {
+                let customText = (splitSpecialDamage.length > 0) ? sUtils.capitalizeAll(splitSpecialDamage[0].trim()) : sUtils.capitalizeAll(specialDamagesLower);
+                sUtils.assignToObject(actorData, `data.traits.${damageID}.custom`, customText);
             }
         }
     }
