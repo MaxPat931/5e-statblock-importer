@@ -195,8 +195,11 @@ export class sbiActor {
 
                 foundArmorItems = true;
             } else {
-                const item = await sUtils.getItemFromPacksAsync(armorType, "equipment");
-
+                let item;
+                item = await sUtils.getItemFromPacksAsync(armorType, "equipment");
+                if (!item) {
+                    item = await sUtils.getItemFromPacksAsync(`${armorType} armor`, "equipment");
+                }
                 if (item) {
                     item.data.equipped = true;
                     item.data.proficient = true;
@@ -320,7 +323,8 @@ export class sbiActor {
     static async setRoleAsync(actor, creatureData) {
         if (!creatureData.role) return;
 
-        await actor.update(sUtils.assignToObject({}, "data.details.type.subtype", creatureData.role));
+        await actor.update(sUtils.assignToObject({}, "data.details.source.custom", creatureData.role));
+        await actor.update(sUtils.assignToObject({}, "data.details.source.book", "Flee, Mortals!"));
     }
 
     static async setSavingThrowsAsync(actor, creatureData) {
@@ -336,22 +340,26 @@ export class sbiActor {
     }
 
     static async setSensesAsync(actor, creatureData) {
+        if (!creatureData.senses) return;
+
         const actorObject = {};
+        const specialSenses = [];
 
         for (const sense of creatureData.senses) {
-            const name = sense.name.toLowerCase();
-            const modifier = parseInt(sense.value);
-
-            sUtils.assignToObject(actorObject, `data.attributes.senses.${name}`, modifier);
-
-            if (name === "darkvision") {
-                sUtils.assignToObject(actorObject, "token.dimSight", modifier);
+            const senseName = sense.name.toLowerCase();
+            const senseRange = sense.value;
+            if (senseName === "perception") {
+                continue;
+            } else if (senseName === "blindsight" || senseName === "darkvision" || senseName === "tremorsense" || senseName === "truesight") {
+                sUtils.assignToObject(actorObject, `data.attributes.senses.${senseName}`, senseRange);
+                sUtils.assignToObject(actorObject, "token.dimSight", senseRange);
+            } else {
+                const specialSense = sUtils.capitalizeFirstLetter(senseName);
+                specialSenses.push(`${specialSense} ${senseRange} ft`);
             }
         }
 
-        if (creatureData.specialSense) {
-            sUtils.assignToObject(actorObject, "data.attributes.senses.special", sUtils.capitalizeAll(creatureData.specialSense));
-        }
+        actorObject["data.attributes.senses.special"] = specialSenses.join('; ');
 
         await actor.update(actorObject);
     }
@@ -467,30 +475,40 @@ export class sbiActor {
     }
 
     static async setRacialDetailsAsync(actor, creatureData) {
+        const getSizeAbbreviation = (size) => {
+            switch (size) {
+                case "small":
+                    return "sm";
+                case "medium":
+                    return "med";
+                case "large":
+                    return "lg";
+                case "gargantuan":
+                    return "grg";
+                default:
+                    return size;
+            }
+        };
+        
         const sizeValue = creatureData.size.toLowerCase();
+        const swarmSizeValue = creatureData.swarmSize?.toLowerCase();
         const detailsData = {};
-
-        switch (sizeValue) {
-            case "small":
-                sUtils.assignToObject(detailsData, "data.traits.size", "sm");
-                break;
-            case "medium":
-                sUtils.assignToObject(detailsData, "data.traits.size", "med");
-                break;
-            case "large":
-                sUtils.assignToObject(detailsData, "data.traits.size", "lg");
-                break;
-            case "gargantuan":
-                sUtils.assignToObject(detailsData, "data.traits.size", "grg");
-                break;
-            default:
-                sUtils.assignToObject(detailsData, "data.traits.size", sizeValue);
-                break;
+        
+        sUtils.assignToObject(detailsData, "data.traits.size", getSizeAbbreviation(sizeValue));
+        
+        if (swarmSizeValue) {
+            sUtils.assignToObject(detailsData, "data.details.type.swarm", getSizeAbbreviation(swarmSizeValue));
         }
 
         sUtils.assignToObject(detailsData, "data.details.alignment", sUtils.capitalizeAll(creatureData.alignment?.trim()));
-        sUtils.assignToObject(detailsData, "data.details.race", sUtils.capitalizeAll(creatureData.race?.trim()));
+        sUtils.assignToObject(detailsData, "data.details.type.subtype", sUtils.capitalizeAll(creatureData.race?.trim()));
         sUtils.assignToObject(detailsData, "data.details.type.value", creatureData.type?.trim().toLowerCase());
+      
+        const hasCustomType = creatureData.customType?.trim();
+        if(hasCustomType) {
+        sUtils.assignToObject(detailsData, "data.details.type.value", "custom");
+        sUtils.assignToObject(detailsData, "data.details.type.custom", sUtils.capitalizeAll(creatureData.customType?.trim()));
+        }
 
         await actor.update(detailsData);
     }

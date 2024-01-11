@@ -11,7 +11,8 @@ import {
     DamageConditionId,
     BlockID,
     TopBlocks,
-    KnownLanguages
+    KnownLanguages,
+    KnownCreatureTypes
 } from "./sbiData.js";
 
 // Steps that the parser goes through:
@@ -425,19 +426,6 @@ export class sbiParser {
         const line = sUtils.combineToString(lines);
         const matches = [...line.matchAll(sRegex.sensesDetails)];
         creature.senses = matches.map(m => new NameValueData(m.groups.name, m.groups.modifier));
-
-        const senses = line.split(",").reverse();
-        // Since there can be only one "special" sense, go backwards through the 
-        // list until we find a known sense. This assumes senses are listed from
-        // specific to general, and handles special case senses like "soulsight"
-        // from MCDM statblocks.
-        for (const sense of senses) {
-            if (sRegex.sensesDetails.exec(sense)) {
-                break;
-            }
-
-            creature.specialSense = sense.trim();
-        }
     }
 
     static setSkills(lines, creature) {
@@ -470,7 +458,16 @@ export class sbiParser {
         creature.size = match.groups.size;
         creature.alignment = match.groups.alignment?.trim();
         creature.race = match.groups.race?.trim();
-        creature.type = match.groups.type?.trim();
+        creature.swarmSize = match.groups.swarmsize?.trim();
+
+        const creatureType = match.groups.type?.toLowerCase().trim();
+        let singleCreatureType = creatureType.endsWith('s') ? creatureType.slice(0, -1) : creatureType;
+        if (singleCreatureType === "monstrositie") {
+            singleCreatureType = "monstrosity";
+        };
+        const isKnownType = KnownCreatureTypes.includes(singleCreatureType);
+        creature.type = isKnownType ? singleCreatureType : undefined;
+        creature.customType = isKnownType ? undefined : creatureType;
     }
 
     // Combines lines of text into sentences and paragraphs. This is complicated because finding 
