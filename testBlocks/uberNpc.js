@@ -12,12 +12,13 @@ CHA
 11 (+0) 16 (+3) 16 (+3) 20 (+5) 14 (+2) 16 (+3)
 Saving Throws Con +10, Int +12, Wis +9
 Skills Arcana +18, History +12, Insight +9, Perception +9
-Damage Vulnerabilities piercing from magic weapons
+Damage Vulnerabilities emotional, piercing from magic weapons
 wielded by good creatures
-Damage Resistances cold, lightning, necrotic
-Damage Immunities poison; bludgeoning, piercing, and
-slashing from nonmagical attacks
-Condition Immunities charmed, exhaustion, frightened,
+Damage Resistances biological, cold, lightning, lazers, necrotic; bludgeoning, piercing, and
+slashing from mundane attacks
+Damage Immunities poison, lazers; bludgeoning, piercing, and
+slashing from Nonmagical Attacks that aren't Silvered
+Condition Immunities charmed, dazed, exhaustion, flanked, frightened,
 paralyzed, poisoned
 Senses truesight 120 ft., passive Perception 19
 Languages Common plus up to five other languages

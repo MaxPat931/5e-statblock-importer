@@ -322,12 +322,14 @@ export class sbiParser {
 
         // Now see if there is any custom text we should add.
         let customType = null;
+        let bypass;
 
         // Split on ";" first for lines like "poison; bludgeoning, piercing, and slashing from nonmagical attacks"
         const strings = line.split(";");
 
         if (strings.length === 2) {
-            customType = strings[1].trim();
+            customType = strings[0].replace(regex, "").replace(/,|and/g, "").trim().replace(/\s+/g, "; ");
+            bypass = strings[1].trim();
         } else {
             // Handle something like "piercing from magic weapons wielded by good creatures"
             // by taking out the known types, commas, and spaces, and seeing if there's anything left.
@@ -355,18 +357,22 @@ export class sbiParser {
         }
 
         if (customType) {
+            const customTypes = sUtils.capitalizeAll(customType).trim();
             switch (type) {
                 case DamageConditionId.immunities:
-                    creature.specialDamageImmunities = customType;
+                    creature.specialDamageImmunities = customTypes;
+                    creature.immunityBypass = bypass;
                     break;
                 case DamageConditionId.resistances:
-                    creature.specialDamageResistances = customType;
+                    creature.specialDamageResistances = customTypes;
+                    creature.resistanceBypass = bypass;
                     break;
                 case DamageConditionId.vulnerabilities:
-                    creature.specialDamageVulnerabilities = customType;
+                    creature.specialDamageVulnerabilities = customTypes;
+                    creature.vulnerabilityBypass = bypass;
                     break;
                 case BlockID.conditionImmunities:
-                    creature.specialConditionImmunities = customType;
+                    creature.specialConditionImmunities = customTypes.trim().replace(/\s+/g, "; ");
                     break;
             }
         }

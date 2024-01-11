@@ -255,9 +255,9 @@ export class sbiActor {
             sUtils.assignToObject(actorObject, "data.traits.ci.custom", sUtils.capitalizeFirstLetter(creatureData.specialConditionImmunities))
         }
 
-        await this.setDamageDataAsync(creatureData.standardDamageImmunities, creatureData.specialDamageImmunities, "di", actorObject);
-        await this.setDamageDataAsync(creatureData.standardDamageResistances, creatureData.specialDamageResistances, "dr", actorObject);
-        await this.setDamageDataAsync(creatureData.standardDamageVulnerabilities, creatureData.specialDamageVulnerabilities, "dv", actorObject);
+        await this.setDamageDataAsync(creatureData.standardDamageImmunities, creatureData.specialDamageImmunities, creatureData.immunityBypass, "di", actorObject);
+        await this.setDamageDataAsync(creatureData.standardDamageResistances, creatureData.specialDamageResistances, creatureData.resistanceBypass, "dr", actorObject);
+        await this.setDamageDataAsync(creatureData.standardDamageVulnerabilities, creatureData.specialDamageVulnerabilities, creatureData.vulnerabilityBypass, "dv", actorObject);
 
         await actor.update(actorObject);
     }
@@ -721,33 +721,36 @@ export class sbiActor {
         }
     }
 
-    static async setDamageDataAsync(standardDamages, specialDamage, damageID, actorData) {
+    static async setDamageDataAsync(standardDamages, specialDamage, bypass, damageID, actorData) {
         if (standardDamages.length) {
             sUtils.assignToObject(actorData, `data.traits.${damageID}.value`, standardDamages)
         }
 
-        if (specialDamage) {
-            const specialDamagesLower = specialDamage.toLowerCase();
+        if (bypass) {
+            const bypassLower = bypass.toLowerCase();
 
             // "mundane attacks" is an MCDM thing.
-            if (specialDamagesLower.includes("nonmagical weapons")
-                || specialDamagesLower.includes("nonmagical attacks")
-                || specialDamagesLower.includes("mundane attacks")) {
+            if (bypassLower.includes("nonmagical weapons")
+                || bypassLower.includes("nonmagical attacks")
+                || bypassLower.includes("mundane attacks")) {
                 sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, "mgc")
             }
 
-            if (specialDamagesLower.includes("adamantine")) {
+            if (bypassLower.includes("adamantine")) {
                 sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, ["ada", "mgc"])
             }
 
-            if (specialDamagesLower.includes("silvered")) {
+            if (bypassLower.includes("silvered")) {
                 sUtils.assignToObject(actorData, `data.traits.${damageID}.bypasses`, ["sil", "mgc"])
             }
 
             // If any bypasses have been set, then assume Foundry will take care of setting the special damage text.
-            if (actorData.data && !actorData.data.traits[damageID]?.bypasses) {
-                sUtils.assignToObject(actorData, `data.traits.${damageID}.custom`, sUtils.capitalizeFirstLetter(specialDamage))
-            }
+            //if (actorData.data && !actorData.data.traits[damageID]?.bypasses) {
+                //sUtils.assignToObject(actorData, `data.traits.${damageID}.custom`, sUtils.capitalizeAll(specialDamage))
+            //}
+        }
+        if (specialDamage) {
+            sUtils.assignToObject(actorData, `data.traits.${damageID}.custom`, specialDamage)
         }
     }
 
