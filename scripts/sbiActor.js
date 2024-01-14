@@ -421,12 +421,19 @@ export class sbiActor {
         description += "<p>A demon’s stat block states the number of souls a given demon ";
         description += "has already consumed at the beginning of combat, ";
         description += "both as a die expression and as an average number.</p>";
+        description += `<p>This demon starts with ${creatureData.souls.value}, or [[/r ${creatureData.souls.formula}]], Souls.</p>`
 
         const itemData = {};
-        itemData.name = `Souls: ${creatureData.souls.value} (${creatureData.souls.formula})`;
+        itemData.name = `Souls`;
         itemData.type = "feat";
 
         sUtils.assignToObject(itemData, "data.description.value", description);
+        sUtils.assignToObject(itemData, "data.uses.value", creatureData.souls.value);
+        sUtils.assignToObject(itemData, "data.uses.max", "99");
+        sUtils.assignToObject(itemData, "data.uses.per", "charges");
+        sUtils.assignToObject(itemData, "data.uses.recovery", creatureData.souls.formula);
+        sUtils.assignToObject(itemData, "data.activation.type", "none")
+
         await this.setItemAsync(itemData, actor);
     }
 
